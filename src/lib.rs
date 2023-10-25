@@ -230,8 +230,7 @@ pub async fn run() -> Result<(), Box<dyn Error>> {
             }
         }
         Event::AboutToWait => {
-            // Not necessary if we use ControlFlow::Poll
-            // state.window().request_redraw();
+            state.window().request_redraw();
         }
         _ => {}
     })?;
