@@ -18,6 +18,7 @@ struct State {
     // unsafe references to the window's resources.
     window: Window,
     exiting: bool,
+    clear_color: wgpu::Color,
 }
 
 impl State {
@@ -97,6 +98,12 @@ impl State {
             config,
             size,
             exiting: false,
+            clear_color: wgpu::Color {
+                r: 0.1,
+                g: 0.2,
+                b: 0.3,
+                a: 1.0,
+            },
         })
     }
 
@@ -113,8 +120,28 @@ impl State {
         }
     }
 
-    pub fn input(&mut self, _event: &WindowEvent) -> bool {
-        false
+    pub fn input(&mut self, event: &WindowEvent) -> bool {
+        return match event {
+            WindowEvent::CursorMoved { position, .. } => {
+                if position.x < ((self.size.width / 2) as f64) {
+                    self.clear_color = wgpu::Color {
+                        r: 0.1,
+                        g: 0.2,
+                        b: 0.3,
+                        a: 1.0,
+                    }
+                } else {
+                    self.clear_color = wgpu::Color {
+                        r: 0.3,
+                        g: 0.2,
+                        b: 0.1,
+                        a: 1.0,
+                    }
+                }
+                true
+            }
+            _ => false,
+        };
     }
 
     pub fn update(&mut self) {}
@@ -144,12 +171,7 @@ impl State {
                     view: &view,
                     resolve_target: None,
                     ops: wgpu::Operations {
-                        load: wgpu::LoadOp::Clear(wgpu::Color {
-                            r: 0.1,
-                            g: 0.2,
-                            b: 0.3,
-                            a: 1.0,
-                        }),
+                        load: wgpu::LoadOp::Clear(self.clear_color),
                         store: true,
                     },
                 })],
@@ -209,7 +231,6 @@ pub async fn run() -> Result<(), Box<dyn Error>> {
                         state.resize(inner_size);
                     }
                     WindowEvent::RedrawRequested {} => {
-                        println!("redraw");
                         state.update();
                         match state.render() {
                             Ok(_) => {}
@@ -223,7 +244,7 @@ pub async fn run() -> Result<(), Box<dyn Error>> {
                                     _ => {}
                                 }
                             }
-                        }
+                        };
                     }
                     _ => {}
                 }
